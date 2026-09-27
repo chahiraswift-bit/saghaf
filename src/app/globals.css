@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --surface: theme(colors.paper);
+  --surface-subtle: theme(colors.paper-subtle);
+  --text: theme(colors.ink);
+  --text-muted: theme(colors.ink-muted);
+  --border: #E7E3F1;
+}
+
+.dark {
+  --surface: theme(colors.void);
+  --surface-subtle: theme(colors.void-subtle);
+  --text: #F3F1FA;
+  --text-muted: #A79FC2;
+  --border: theme(colors.void-line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--surface);
+  color: var(--text);
+}
+
+::selection {
+  background-color: theme(colors.shagaf.300);
+  color: theme(colors.shagaf.950);
+}
+
+:focus-visible {
+  outline: 2px solid theme(colors.shagaf.500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.container-shagaf {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .container-shagaf {
+    padding-inline: 2rem;
+  }
+}
