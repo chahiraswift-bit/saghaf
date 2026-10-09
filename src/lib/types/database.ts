@@ -34,11 +34,13 @@ export interface Database {
           full_name: string;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Row"]>;
+        Relationships: [];
       };
       categories: {
         Row: { id: string; name: string; slug: string; created_at: string };
         Insert: { id?: string; name: string; slug: string };
         Update: Partial<{ name: string; slug: string }>;
+        Relationships: [];
       };
       schools: {
         Row: {
@@ -64,6 +66,7 @@ export interface Database {
           slug: string;
         };
         Update: Partial<Database["public"]["Tables"]["schools"]["Row"]>;
+        Relationships: [];
       };
       school_teachers: {
         Row: {
@@ -74,6 +77,7 @@ export interface Database {
         };
         Insert: { id?: string; school_id: string; teacher_id: string };
         Update: Partial<{ school_id: string; teacher_id: string }>;
+        Relationships: [];
       };
       courses: {
         Row: {
@@ -103,6 +107,29 @@ export interface Database {
           slug: string;
         };
         Update: Partial<Database["public"]["Tables"]["courses"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "courses_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "courses_school_id_fkey";
+            columns: ["school_id"];
+            isOneToOne: false;
+            referencedRelation: "schools";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "courses_teacher_id_fkey";
+            columns: ["teacher_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       course_lessons: {
         Row: {
@@ -122,6 +149,7 @@ export interface Database {
           order_index: number;
         };
         Update: Partial<Database["public"]["Tables"]["course_lessons"]["Row"]>;
+        Relationships: [];
       };
       enrollments: {
         Row: {
@@ -134,6 +162,7 @@ export interface Database {
         };
         Insert: { id?: string; learner_id: string; course_id: string; status?: string };
         Update: Partial<{ status: string; completed_at: string | null }>;
+        Relationships: [];
       };
       lesson_progress: {
         Row: {
@@ -152,6 +181,7 @@ export interface Database {
           completed?: boolean;
         };
         Update: Partial<{ completed: boolean; completed_at: string | null }>;
+        Relationships: [];
       };
       certificates: {
         Row: {
@@ -163,6 +193,7 @@ export interface Database {
         };
         Insert: { id?: string; learner_id: string; course_id: string; certificate_code: string };
         Update: never;
+        Relationships: [];
       };
       reviews: {
         Row: {
@@ -175,6 +206,7 @@ export interface Database {
         };
         Insert: { id?: string; learner_id: string; course_id: string; rating: number; comment?: string | null };
         Update: Partial<{ rating: number; comment: string | null }>;
+        Relationships: [];
       };
       favorites: {
         Row: {
@@ -186,6 +218,7 @@ export interface Database {
         };
         Insert: { id?: string; learner_id: string; target_type: string; target_id: string };
         Update: never;
+        Relationships: [];
       };
       advertisements: {
         Row: {
@@ -206,6 +239,7 @@ export interface Database {
           title: string;
         };
         Update: Partial<Database["public"]["Tables"]["advertisements"]["Row"]>;
+        Relationships: [];
       };
       notifications: {
         Row: {
@@ -219,6 +253,7 @@ export interface Database {
         };
         Insert: { id?: string; user_id: string; type: string; title: string; message?: string | null };
         Update: Partial<{ read: boolean }>;
+        Relationships: [];
       };
       transactions: {
         Row: {
@@ -236,12 +271,16 @@ export interface Database {
           amount_dzd: number;
         };
         Update: Partial<Database["public"]["Tables"]["transactions"]["Row"]>;
+        Relationships: [];
       };
       platform_settings: {
         Row: { key: string; value: string; updated_at: string };
         Insert: { key: string; value: string };
         Update: Partial<{ value: string }>;
+        Relationships: [];
       };
     };
+    Views: { [_ in never]: never };
+    Functions: { [_ in never]: never };
   };
 }

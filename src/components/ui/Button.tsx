@@ -6,11 +6,11 @@ type Size = "sm" | "md" | "lg";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-shagaf-700 text-white hover:bg-shagaf-800 active:bg-shagaf-900 disabled:bg-shagaf-300",
+    "bg-shagaf-700 text-white shadow-[0_8px_20px_-10px_rgba(111,4,70,0.65)] hover:bg-shagaf-800 active:translate-y-px disabled:bg-shagaf-300",
   secondary:
     "bg-shagaf-100 text-shagaf-800 hover:bg-shagaf-200 dark:bg-shagaf-900/40 dark:text-shagaf-200 dark:hover:bg-shagaf-900/60",
   outline:
-    "border border-[--border] text-[--text] hover:bg-[--surface-subtle] bg-transparent",
+    "border border-[--border] bg-white/75 text-[--text] hover:bg-[--surface-subtle] backdrop-blur-sm dark:bg-white/5",
   ghost: "text-[--text] hover:bg-[--surface-subtle] bg-transparent",
 };
 
@@ -28,7 +28,7 @@ export const Button = forwardRef<
     <button
       ref={ref}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-shagaf-600 disabled:cursor-not-allowed disabled:opacity-60",
         variants[variant],
         sizes[size],
         className

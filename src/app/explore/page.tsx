@@ -1,12 +1,14 @@
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { CourseCard, type CourseCardData } from "@/components/course/CourseCard";
 import { SchoolCard, type SchoolCardData } from "@/components/school/SchoolCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Search } from "lucide-react";
+import { dictionaries, getLocale, withLocale } from "@/lib/i18n";
 
-export const revalidate = 30;
+export const dynamic = "force-dynamic";
 
 type Tab = "all" | "courses" | "schools" | "teachers";
 
@@ -55,8 +57,10 @@ async function getTeachers(q: string) {
 export default async function ExplorePage({
   searchParams,
 }: {
-  searchParams: { tab?: string; q?: string };
+  searchParams: { tab?: string; q?: string; lang?: string };
 }) {
+  const locale = getLocale(searchParams.lang);
+  const t = dictionaries[locale];
   const tab = (["all", "courses", "schools", "teachers"].includes(searchParams.tab ?? "")
     ? searchParams.tab
     : "all") as Tab;
@@ -69,51 +73,70 @@ export default async function ExplorePage({
   ]);
 
   const tabs: { value: Tab; label: string }[] = [
-    { value: "all", label: "All" },
-    { value: "courses", label: "Courses" },
-    { value: "schools", label: "Schools" },
-    { value: "teachers", label: "Teachers" },
+    { value: "all", label: t.explore.all },
+    { value: "courses", label: t.explore.courses },
+    { value: "schools", label: t.explore.schools },
+    { value: "teachers", label: t.explore.teachers },
   ];
 
   return (
-    <div className="container-shagaf py-10">
-      <h1 className="font-display text-3xl font-semibold text-[--text]">Explore SHAGAF</h1>
-      <p className="mt-1 text-ink-muted">Search courses, schools and teachers in one place.</p>
+    <div className="container-shagaf py-8 md:py-12">
+      <section className="grid gap-7 md:grid-cols-[1fr_0.82fr] md:items-center md:gap-10">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-shagaf-600">{t.explore.eyebrow}</p>
+          <h1 className="mt-3 font-display text-4xl font-semibold leading-tight text-shagaf-700 dark:text-shagaf-200 md:text-5xl">{t.explore.title}</h1>
+          <p className="mt-4 max-w-xl text-base leading-7 text-[--text-muted] md:text-lg">{t.explore.subtitle}</p>
+        </div>
+        <div className="relative min-h-[220px] overflow-hidden rounded-[28px] border border-[--border] bg-shagaf-900 shadow-[0_30px_80px_-30px_rgba(31,21,61,0.5)] sm:min-h-[260px]">
+          <Image
+            src="/images/academy-classroom-interior.webp"
+            alt="Bright academy classroom ready for a lesson"
+            fill
+            priority
+            sizes="(max-width: 767px) 100vw, (max-width: 1200px) 40vw, 460px"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#171126]/80 via-[#171126]/25 to-transparent" />
+          <p className="absolute bottom-0 p-4 font-display text-lg font-semibold text-white sm:p-5">{t.explore.photoCaption}</p>
+        </div>
+      </section>
 
-      <form className="mt-6 flex gap-2" action="/explore" method="get">
+      <form className="mt-8 flex max-w-3xl gap-2 rounded-2xl border border-[--border] bg-[--surface] p-2 shadow-card" action="/explore" method="get">
         <input type="hidden" name="tab" value={tab} />
+        {locale !== "en" && <input type="hidden" name="lang" value={locale} />}
         <input
           name="q"
           defaultValue={q}
-          placeholder="Search for Python, UI design, French…"
-          className="h-11 w-full max-w-md rounded-md border border-[--border] bg-[--surface] px-3.5 text-sm"
+          placeholder={t.explore.searchPlaceholder}
+          className="h-12 min-w-0 flex-1 rounded-xl border border-transparent bg-transparent px-4 text-sm text-[--text] placeholder:text-[--text-muted] focus:border-shagaf-200 focus:outline-none"
         />
-        <button className="h-11 rounded-md bg-shagaf-700 px-5 text-sm font-medium text-white hover:bg-shagaf-800">
-          Search
+        <button className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-shagaf-700 px-4 text-sm font-medium text-white transition-colors hover:bg-shagaf-800 sm:px-5">
+          <Search size={16} aria-hidden="true" />
+          <span>{t.explore.search}</span>
         </button>
       </form>
 
-      <div className="mt-6 flex gap-1 border-b border-[--border]">
+      <nav aria-label="Explore categories" className="mt-7 flex gap-1 overflow-x-auto border-b border-[--border] pb-1">
         {tabs.map((t) => (
           <Link
             key={t.value}
-            href={`/explore?tab=${t.value}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+            href={withLocale(`/explore?tab=${t.value}${q ? `&q=${encodeURIComponent(q)}` : ""}`, locale)}
             className={cn(
-              "border-b-2 px-4 py-2.5 text-sm font-medium",
+              "whitespace-nowrap rounded-t-xl border-b-2 px-4 py-3 text-sm font-medium transition-colors",
               tab === t.value
                 ? "border-shagaf-600 text-[--text]"
-                : "border-transparent text-ink-muted hover:text-[--text]"
+                : "border-transparent text-[--text-muted] hover:text-[--text]"
             )}
           >
             {t.label}
           </Link>
         ))}
-      </div>
+      </nav>
 
       <div className="mt-8 space-y-12">
         {(tab === "all" || tab === "courses") && (
           <section>
-            {tab === "all" && <h2 className="mb-4 font-display text-xl font-semibold text-[--text]">Courses</h2>}
+            {tab === "all" && <h2 className="mb-4 font-display text-xl font-semibold text-[--text]">{t.explore.courses}</h2>}
             {courses.length > 0 ? (
               <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {courses.map((c) => (
@@ -121,14 +144,14 @@ export default async function ExplorePage({
                 ))}
               </div>
             ) : (
-              <EmptyState title="No courses found" hint={q ? `Nothing matched "${q}".` : "No published courses yet."} />
+              <EmptyState title={t.explore.noCourses} hint={q ? t.explore.noMatch.replace("{q}", q) : t.explore.noPublished} />
             )}
           </section>
         )}
 
         {(tab === "all" || tab === "schools") && (
           <section>
-            {tab === "all" && <h2 className="mb-4 font-display text-xl font-semibold text-[--text]">Schools</h2>}
+            {tab === "all" && <h2 className="mb-4 font-display text-xl font-semibold text-[--text]">{t.explore.schools}</h2>}
             {schools.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-3">
                 {schools.map((s) => (
@@ -136,30 +159,30 @@ export default async function ExplorePage({
                 ))}
               </div>
             ) : (
-              <EmptyState title="No schools found" />
+              <EmptyState title={t.explore.noSchools} />
             )}
           </section>
         )}
 
         {(tab === "all" || tab === "teachers") && (
           <section>
-            {tab === "all" && <h2 className="mb-4 font-display text-xl font-semibold text-[--text]">Teachers</h2>}
+            {tab === "all" && <h2 className="mb-4 font-display text-xl font-semibold text-[--text]">{t.explore.teachers}</h2>}
             {teachers.length > 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                {teachers.map((t) => (
-                  <div key={t.id} className="flex items-center gap-3 rounded-lg border border-[--border] p-4">
+                {teachers.map((teacher) => (
+                  <div key={teacher.id} className="flex items-center gap-3 rounded-2xl border border-[--border] bg-[--surface] p-4 shadow-card transition-colors hover:bg-[--surface-subtle]">
                     <div className="flex h-11 w-11 items-center justify-center rounded-full bg-shagaf-100 text-shagaf-700 dark:bg-shagaf-900/40 dark:text-shagaf-200">
                       <GraduationCap size={18} />
                     </div>
                     <div>
-                      <p className="font-medium text-[--text]">{t.full_name}</p>
-                      {t.headline && <p className="text-xs text-ink-muted">{t.headline}</p>}
+                      <p className="font-medium text-[--text]">{teacher.full_name}</p>
+                      {teacher.headline && <p className="text-xs text-[--text-muted]">{teacher.headline}</p>}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <EmptyState title="No teachers found" />
+              <EmptyState title={t.explore.noTeachers} />
             )}
           </section>
         )}

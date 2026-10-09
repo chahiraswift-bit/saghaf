@@ -41,8 +41,8 @@ npm install
 ## 4. Run the database migration
 
 1. In the Supabase dashboard, open **SQL Editor**.
-2. Open `supabase/migrations/0001_init.sql` from this repo, copy its full
-   contents, paste into the SQL Editor, and click **Run**.
+2. Open every SQL file in `supabase/migrations/` in filename order, copy
+  each file's full contents, paste into the SQL Editor, and click **Run**.
    This creates every table, enum, index, trigger, Row Level Security
    policy, and storage bucket described in the project brief.
 3. Confirm it worked: **Table Editor** should now show `profiles`,
@@ -57,8 +57,9 @@ npm install
 cp .env.example .env.local
 ```
 
-Fill in the four values from steps 3 and (for `SEED_DEMO_PASSWORD`) your
-own choice of a demo password, at least 8 characters.
+Fill in the values from steps 3 and (for `SEED_DEMO_PASSWORD`) your own
+choice of a demo password with at least 12 characters, uppercase and
+lowercase letters, a number, and a special character.
 
 ## 6. Seed demo data (recommended)
 

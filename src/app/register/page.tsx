@@ -9,8 +9,16 @@ import { Input, Label, FieldError } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { GraduationCap, Presentation, School } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getPasswordValidationError } from "@/lib/auth/password";
+import { withLocale } from "@/lib/i18n";
 
 type Role = "learner" | "teacher" | "school_admin";
+
+const ROLE_HOME: Record<Role, string> = {
+  learner: "/dashboard",
+  teacher: "/teacher",
+  school_admin: "/school",
+};
 
 const roleOptions: { value: Role; label: string; icon: typeof GraduationCap }[] = [
   { value: "learner", label: "Learner", icon: GraduationCap },
@@ -24,6 +32,7 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -31,26 +40,40 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    const passwordError = getPasswordValidationError(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
 
     setLoading(true);
-    const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName, role } },
-    });
-    setLoading(false);
+    try {
+      const supabase = createClient();
+      const redirectTo = `${window.location.origin}/auth/callback?next=${ROLE_HOME[role]}`;
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: fullName, role },
+          emailRedirectTo: redirectTo,
+        },
+      });
 
-    if (signUpError) {
-      setError(signUpError.message);
-      return;
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+
+      router.push("/register/check-email");
+    } catch {
+      setError("We couldn’t reach the authentication service. Check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push("/register/check-email");
   }
 
   return (
@@ -110,11 +133,29 @@ export default function RegisterPage() {
             id="password"
             type="password"
             required
-            minLength={8}
+              minLength={12}
+              autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
+              placeholder="Create a strong password"
           />
+            <p className="mt-1.5 text-xs text-ink-muted">
+              At least 12 characters, with uppercase, lowercase, a number, and a special character.
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="confirmPassword">Confirm password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              required
+              minLength={12}
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Enter your password again"
+            />
           <FieldError>{error}</FieldError>
         </div>
 
@@ -125,7 +166,7 @@ export default function RegisterPage() {
 
       <p className="mt-6 text-center text-sm text-ink-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-shagaf-600 hover:underline">
+        <Link href={withLocale("/login", "en")} className="font-medium text-shagaf-600 hover:underline">
           Log in
         </Link>
       </p>

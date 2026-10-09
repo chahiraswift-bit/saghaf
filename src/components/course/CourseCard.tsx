@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { Star, Users, Clock } from "lucide-react";
+import Image from "next/image";
+import { Star, Users } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { formatPrice } from "@/lib/utils";
 
@@ -19,17 +19,15 @@ export interface CourseCardData {
 
 export function CourseCard({ course }: { course: CourseCardData }) {
   return (
-    <Link
-      href={`/courses/${course.slug}`}
-      className="group block overflow-hidden rounded-lg border border-[--border] bg-[--surface] transition-colors hover:border-shagaf-400"
-    >
-      <div className="aspect-[16/10] w-full overflow-hidden bg-[--surface-subtle]">
+    <article className="group overflow-hidden rounded-lg border border-[--border] bg-[--surface] transition-shadow hover:shadow-card">
+      <div className="relative aspect-[16/10] w-full overflow-hidden bg-[--surface-subtle]">
         {course.thumbnail_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={course.thumbnail_url}
             alt=""
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            fill
+            sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
@@ -70,6 +68,6 @@ export function CourseCard({ course }: { course: CourseCardData }) {
           </span>
         </div>
       </div>
-    </Link>
+    </article>
   );
 }

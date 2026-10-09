@@ -3,19 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --surface: theme(colors.paper);
-  --surface-subtle: theme(colors.paper-subtle);
-  --text: theme(colors.ink);
-  --text-muted: theme(colors.ink-muted);
-  --border: #E7E3F1;
+  --surface: #fffefd;
+  --surface-subtle: #fbf6f8;
+  --text: #24131d;
+  --text-muted: #6e6069;
+  --border: #ede2e8;
+  color-scheme: light;
 }
 
 .dark {
-  --surface: theme(colors.void);
-  --surface-subtle: theme(colors.void-subtle);
-  --text: #F3F1FA;
-  --text-muted: #A79FC2;
-  --border: theme(colors.void-line);
+  --surface: #171116;
+  --surface-subtle: #211820;
+  --text: #f9f2f6;
+  --text-muted: #c8b9c2;
+  --border: #382833;
+  color-scheme: dark;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -29,11 +31,34 @@
 
 html {
   scroll-behavior: smooth;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.lang-switching main,
+html.lang-switching [data-transition-layer] {
+  opacity: 0.72;
+  transform: translateY(2px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  letter-spacing: 0;
 }
 
 body {
-  background-color: var(--surface);
+  background: var(--surface);
   color: var(--text);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+main {
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
 ::selection {

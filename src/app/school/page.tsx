@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { RoadmapCard } from "@/components/dashboard/RoadmapCard";
 
+export const dynamic = "force-dynamic";
+
 export default async function SchoolHome() {
   const supabase = createClient();
   const {
@@ -18,7 +20,7 @@ export default async function SchoolHome() {
   return (
     <div className="container-shagaf py-12">
       <p className="text-sm text-ink-muted">Signed in as {user.email}</p>
-      <h1 className="mt-1 font-display text-3xl font-semibold text-[--text]">
+      <h1 className="mt-1 font-display text-3xl font-semibold text-shagaf-700 dark:text-shagaf-200">
         Welcome, {profile?.full_name ?? "there"}
       </h1>
       <p className="mt-2 text-ink-muted">

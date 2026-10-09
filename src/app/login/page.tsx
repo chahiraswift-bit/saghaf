@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Input, Label, FieldError } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { withLocale } from "@/lib/i18n";
 
 function LoginForm() {
   const router = useRouter();
@@ -21,26 +22,37 @@ function LoginForm() {
     setError(null);
     setLoading(true);
 
-    const supabase = createClient();
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+    try {
+      const supabase = createClient();
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (signInError) {
-      setError(
-        signInError.message === "Invalid login credentials"
-          ? "Incorrect email or password."
-          : signInError.message
-      );
-      return;
+      if (signInError) {
+        setError(
+          signInError.message === "Invalid login credentials"
+            ? "Incorrect email or password."
+            : signInError.message
+        );
+        return;
+      }
+
+      const redirectTo = searchParams.get("redirect");
+      router.push(redirectTo?.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/");
+      router.refresh();
+    } catch {
+      setError("We couldn’t reach the authentication service. Check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
-
-    router.push(searchParams.get("redirect") ?? "/");
-    router.refresh();
   }
 
   return (
     <AuthLayout title="Welcome back" subtitle="Log in to continue your journey.">
       <form onSubmit={handleSubmit} className="space-y-5">
+        {searchParams.get("passwordUpdated") === "1" && (
+          <p role="status" className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+            Your password has been updated. Log in with your new password.
+          </p>
+        )}
         <div>
           <Label htmlFor="email">Email</Label>
           <Input
@@ -55,7 +67,7 @@ function LoginForm() {
         <div>
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
-            <Link href="/forgot-password" className="mb-1.5 text-xs text-shagaf-600 hover:underline">
+            <Link href={withLocale("/forgot-password", "en")} className="mb-1.5 text-xs text-shagaf-600 hover:underline">
               Forgot password?
             </Link>
           </div>
@@ -76,7 +88,7 @@ function LoginForm() {
 
       <p className="mt-6 text-center text-sm text-ink-muted">
         New to SHAGAF?{" "}
-        <Link href="/register" className="font-medium text-shagaf-600 hover:underline">
+        <Link href={withLocale("/register", "en")} className="font-medium text-shagaf-600 hover:underline">
           Create an account
         </Link>
       </p>

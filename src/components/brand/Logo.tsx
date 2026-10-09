@@ -25,7 +25,8 @@ export function Logo({
           alt="SHAGAF"
           width={size}
           height={size * 1.5}
-          className={variant === "auto" ? "block dark:hidden" : ""}
+          className={variant === "auto" ? "block shrink-0 dark:hidden" : "shrink-0"}
+          style={{ width: size, height: "auto" }}
           priority
         />
       )}
@@ -35,8 +36,8 @@ export function Logo({
           alt="SHAGAF"
           width={size}
           height={size * 1.5}
-          className={variant === "auto" ? "hidden dark:block" : ""}
-          style={{ filter: "brightness(1.05)" }}
+          className={variant === "auto" ? "hidden shrink-0 dark:block" : "shrink-0"}
+          style={{ width: size, height: "auto", filter: "brightness(1.05)" }}
           priority
         />
       )}
@@ -63,7 +64,7 @@ export function LogoLockup({ theme = "auto" }: { theme?: "auto" | "light" | "dar
           src="/brand/logo-lockup-light.png"
           alt="SHAGAF — From Passion to Profession"
           width={220}
-          height={200}
+          height={294}
           className={theme === "auto" ? "block dark:hidden" : ""}
         />
       )}
@@ -72,7 +73,7 @@ export function LogoLockup({ theme = "auto" }: { theme?: "auto" | "light" | "dar
           src="/brand/logo-lockup-dark.png"
           alt="SHAGAF — From Passion to Profession"
           width={220}
-          height={177}
+          height={294}
           className={theme === "auto" ? "hidden dark:block" : ""}
         />
       )}

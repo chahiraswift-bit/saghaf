@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Image from "next/image";
 import { MapPin, BadgeCheck } from "lucide-react";
 
 export interface SchoolCardData {
@@ -12,14 +12,10 @@ export interface SchoolCardData {
 
 export function SchoolCard({ school }: { school: SchoolCardData }) {
   return (
-    <Link
-      href={`/schools/${school.slug}`}
-      className="group flex items-start gap-4 rounded-lg border border-[--border] bg-[--surface] p-5 transition-colors hover:border-shagaf-400"
-    >
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-shagaf-100 dark:bg-shagaf-900/40">
+    <article className="flex items-start gap-4 rounded-lg border border-[--border] bg-[--surface] p-5">
+      <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-shagaf-100 dark:bg-shagaf-900/40">
         {school.logo_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={school.logo_url} alt="" className="h-full w-full object-cover" />
+          <Image src={school.logo_url} alt="" fill sizes="56px" className="object-cover" />
         ) : (
           <span className="font-display font-semibold text-shagaf-700 dark:text-shagaf-300">
             {school.name.slice(0, 2).toUpperCase()}
@@ -40,6 +36,6 @@ export function SchoolCard({ school }: { school: SchoolCardData }) {
           <p className="mt-2 line-clamp-2 text-sm text-ink-muted">{school.description}</p>
         )}
       </div>
-    </Link>
+    </article>
   );
 }

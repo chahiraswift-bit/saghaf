@@ -8,15 +8,29 @@ const config: Config = {
       colors: {
         // Neutral surfaces
         paper: "#FFFFFF",
-        "paper-subtle": "#F6F4FA",
-        ink: "#161221",
-        "ink-muted": "#5C5570",
-        void: "#0B0A10",
-        "void-subtle": "#151320",
-        "void-line": "#26223A",
+        "paper-subtle": "#FBF6F8",
+        ink: "#24131D",
+        "ink-muted": "var(--text-muted)",
+        void: "#171116",
+        "void-subtle": "#211820",
+        "void-line": "#382833",
 
-        // Brand purple ramp (sourced from the logo gradient)
+        // Primary burgundy ramp centered on the SHAGAF brand color.
         shagaf: {
+          950: "#2B041D",
+          900: "#45052D",
+          800: "#59063A",
+          700: "#6F0446",
+          600: "#8C1E60",
+          500: "#A83D7B",
+          400: "#C06A9A",
+          300: "#D69BB9",
+          200: "#E9C7D8",
+          100: "#F6E7EF",
+          50: "#FCF5F8",
+        },
+        // Existing purple remains a secondary brand color.
+        purple: {
           950: "#1C1140",
           900: "#2A1868",
           800: "#3A1F95",

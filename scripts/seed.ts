@@ -129,6 +129,11 @@ async function main() {
   const demoTeacherId = await createUser("teacher@shagaf.demo", "Demo Teacher", "teacher");
   const demoSchoolId = await createUser("school@shagaf.demo", "Demo School Admin", "school_admin");
   const demoAdminId = await createUser("admin@shagaf.demo", "Demo Super Admin", "super_admin");
+  const { error: adminRoleError } = await admin
+    .from("profiles")
+    .update({ role: "super_admin" })
+    .eq("id", demoAdminId);
+  if (adminRoleError) throw adminRoleError;
   console.log("Created 4 fixed demo accounts (see README for credentials).");
 
   // 3. Bulk teachers (10) -------------------------------------------------
