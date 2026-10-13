@@ -53,8 +53,8 @@ const config: Config = {
         danger: "#D14343",
       },
       fontFamily: {
-        display: ["var(--font-display)", "system-ui", "sans-serif"],
-        body: ["var(--font-body)", "system-ui", "sans-serif"],
+        display: ["Segoe UI", "Arial", "sans-serif"],
+        body: ["Segoe UI", "Arial", "sans-serif"],
       },
       borderRadius: {
         sm: "6px",
