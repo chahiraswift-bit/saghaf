@@ -2,6 +2,8 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/types/database";
 
+type MiddlewareProfile = Pick<Database["public"]["Tables"]["profiles"]["Row"], "role" | "full_name">;
+
 function getSupabaseEnv(name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_ANON_KEY") {
   const value = process.env[name];
   if (!value) {
@@ -50,14 +52,14 @@ export async function updateSession(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    let profile: { role: string; full_name: string | null } | null = null;
+    let profile: MiddlewareProfile | null = null;
 
     if (user) {
-      const { data } = await supabase
+      const { data } = (await supabase
         .from("profiles")
         .select("role, full_name")
         .eq("id", user.id)
-        .single();
+        .single()) as { data: MiddlewareProfile | null };
       profile = data;
     }
 

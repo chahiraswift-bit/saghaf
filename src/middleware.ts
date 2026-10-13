@@ -30,9 +30,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (profile && profile.role !== matchedRule.role) {
+    if (profile && (profile as any).role !== matchedRule.role) {
       const url = request.nextUrl.clone();
-      url.pathname = ROLE_HOME[profile.role] ?? "/";
+      url.pathname = ROLE_HOME[(profile as any).role] ?? "/";
       return NextResponse.redirect(url);
     }
   }
