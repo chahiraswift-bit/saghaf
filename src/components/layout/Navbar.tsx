@@ -24,6 +24,10 @@ const links = [
   { href: "/about", label: "About" },
 ];
 
+interface ProfileRole {
+  role: string | null;
+}
+
 export async function Navbar() {
   const supabase = createClient();
   const locale = getLocale((await import("next/headers")).cookies().get("lang")?.value ?? undefined);
@@ -33,7 +37,11 @@ export async function Navbar() {
 
   let role: string | null = null;
   if (user) {
-    const { data } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    const { data } = (await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle()) as { data: ProfileRole | null };
     role = data?.role ?? null;
   }
   const dashboardHref = role ? ROLE_HOME[role] ?? "/" : "/dashboard";
