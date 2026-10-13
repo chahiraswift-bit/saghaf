@@ -4,6 +4,11 @@ import { RoadmapCard } from "@/components/dashboard/RoadmapCard";
 
 export const dynamic = "force-dynamic";
 
+interface DashboardProfile {
+  full_name: string | null;
+  role: string | null;
+}
+
 export default async function DashboardHome() {
   const supabase = createClient();
   const {
@@ -11,20 +16,22 @@ export default async function DashboardHome() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from("profiles")
     .select("full_name, role")
     .eq("id", user.id)
-    .single();
+    .maybeSingle()) as { data: DashboardProfile | null };
+
+  const profileData: DashboardProfile = profile ?? { full_name: null, role: null };
 
   return (
     <div className="container-shagaf py-12">
       <p className="text-sm text-ink-muted">Signed in as {user.email}</p>
       <h1 className="mt-1 font-display text-3xl font-semibold text-shagaf-700 dark:text-shagaf-200">
-        Welcome, {profile?.full_name ?? "there"}
+        Welcome, {profileData.full_name ?? "there"}
       </h1>
       <p className="mt-2 text-ink-muted">
-        Your role: <span className="font-medium text-[--text]">{profile?.role}</span>
+        Your role: <span className="font-medium text-[--text]">{profileData.role}</span>
       </p>
 
       <div className="mt-10">
