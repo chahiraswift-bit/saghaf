@@ -13,45 +13,57 @@ export const dynamic = "force-dynamic";
 type Tab = "all" | "courses" | "schools" | "teachers";
 
 async function getCourses(q: string) {
-  const supabase = createClient();
-  let query = supabase
-    .from("courses")
-    .select(
-      "slug, title, thumbnail_url, level, mode, price_dzd, rating_avg, rating_count, students_count, teacher:profiles(full_name), school:schools(name)"
-    )
-    .eq("status", "published")
-    .limit(24);
-  if (q) query = query.ilike("title", `%${q}%`);
-  const { data } = await query;
-  return (data ?? []).map((c: any) => ({
-    ...c,
-    teacher_name: c.teacher?.full_name ?? null,
-    school_name: c.school?.name ?? null,
-  })) as CourseCardData[];
+  try {
+    const supabase = createClient();
+    let query = supabase
+      .from("courses")
+      .select(
+        "slug, title, thumbnail_url, level, mode, price_dzd, rating_avg, rating_count, students_count, teacher:profiles(full_name), school:schools(name)"
+      )
+      .eq("status", "published")
+      .limit(24);
+    if (q) query = query.ilike("title", `%${q}%`);
+    const { data } = await query;
+    return (data ?? []).map((c: any) => ({
+      ...c,
+      teacher_name: c.teacher?.full_name ?? null,
+      school_name: c.school?.name ?? null,
+    })) as CourseCardData[];
+  } catch {
+    return [];
+  }
 }
 
 async function getSchools(q: string) {
-  const supabase = createClient();
-  let query = supabase
-    .from("schools")
-    .select("slug, name, logo_url, location, verified, description")
-    .eq("status", "approved")
-    .limit(24);
-  if (q) query = query.ilike("name", `%${q}%`);
-  const { data } = await query;
-  return (data ?? []) as SchoolCardData[];
+  try {
+    const supabase = createClient();
+    let query = supabase
+      .from("schools")
+      .select("slug, name, logo_url, location, verified, description")
+      .eq("status", "approved")
+      .limit(24);
+    if (q) query = query.ilike("name", `%${q}%`);
+    const { data } = await query;
+    return (data ?? []) as SchoolCardData[];
+  } catch {
+    return [];
+  }
 }
 
 async function getTeachers(q: string) {
-  const supabase = createClient();
-  let query = supabase
-    .from("profiles")
-    .select("id, full_name, headline, avatar_url")
-    .eq("role", "teacher")
-    .limit(24);
-  if (q) query = query.ilike("full_name", `%${q}%`);
-  const { data } = await query;
-  return data ?? [];
+  try {
+    const supabase = createClient();
+    let query = supabase
+      .from("profiles")
+      .select("id, full_name, headline, avatar_url")
+      .eq("role", "teacher")
+      .limit(24);
+    if (q) query = query.ilike("full_name", `%${q}%`);
+    const { data } = await query;
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export default async function ExplorePage({

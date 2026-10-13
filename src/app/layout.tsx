@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   title: "SHAGAF — From Passion to Profession",
   description:
     "SHAGAF is a digital education ecosystem connecting learners, teachers and private schools through one platform.",
-  icons: { icon: "/icon.png" },
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 // Runs before paint to avoid a light/dark flash on load.

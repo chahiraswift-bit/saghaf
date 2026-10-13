@@ -18,41 +18,51 @@ function getSupabaseEnv(name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient<Database>(
-    getSupabaseEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    getSupabaseEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
+  let supabase: ReturnType<typeof createServerClient<Database>> | null = null;
+
+  try {
+    supabase = createServerClient<Database>(
+      getSupabaseEnv("NEXT_PUBLIC_SUPABASE_URL"),
+      getSupabaseEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            response = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options)
+            );
+          },
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let profile: { role: string; full_name: string | null } | null = null;
-
-  if (user) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("role, full_name")
-      .eq("id", user.id)
-      .single();
-    profile = data;
+      }
+    );
+  } catch {
+    return { response, user: null, profile: null };
   }
 
-  return { response, user, profile };
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    let profile: { role: string; full_name: string | null } | null = null;
+
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("role, full_name")
+        .eq("id", user.id)
+        .single();
+      profile = data;
+    }
+
+    return { response, user, profile };
+  } catch {
+    return { response, user: null, profile: null };
+  }
 }

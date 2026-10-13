@@ -11,31 +11,39 @@ import { SchoolCard, type SchoolCardData } from "@/components/school/SchoolCard"
 export const dynamic = "force-dynamic";
 
 async function getFeaturedCourses(): Promise<CourseCardData[]> {
-  const supabase = createClient();
-  const { data } = await supabase
-    .from("courses")
-    .select(
-      "slug, title, thumbnail_url, level, mode, price_dzd, rating_avg, rating_count, students_count, teacher:profiles(full_name), school:schools(name)"
-    )
-    .eq("status", "published")
-    .order("students_count", { ascending: false })
-    .limit(6);
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("courses")
+      .select(
+        "slug, title, thumbnail_url, level, mode, price_dzd, rating_avg, rating_count, students_count, teacher:profiles(full_name), school:schools(name)"
+      )
+      .eq("status", "published")
+      .order("students_count", { ascending: false })
+      .limit(6);
 
-  return (data ?? []).map((c: any) => ({
-    ...c,
-    teacher_name: c.teacher?.full_name ?? null,
-    school_name: c.school?.name ?? null,
-  }));
+    return (data ?? []).map((c: any) => ({
+      ...c,
+      teacher_name: c.teacher?.full_name ?? null,
+      school_name: c.school?.name ?? null,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 async function getFeaturedSchools(): Promise<SchoolCardData[]> {
-  const supabase = createClient();
-  const { data } = await supabase
-    .from("schools")
-    .select("slug, name, logo_url, location, verified, description")
-    .eq("status", "approved")
-    .limit(3);
-  return data ?? [];
+  try {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("schools")
+      .select("slug, name, logo_url, location, verified, description")
+      .eq("status", "approved")
+      .limit(3);
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }
 
 const offerings = [
