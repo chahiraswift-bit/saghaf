@@ -16,22 +16,23 @@ export default async function AdminHome() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: profile } = (await supabase
+  // جلب البيانات مع تحديد النوع بشكل صحيح لـ TypeScript
+  const { data } = await supabase
     .from("profiles")
     .select("full_name, role")
     .eq("id", user.id)
-    .maybeSingle()) as { data: AdminProfile | null };
+    .maybeSingle();
 
-  const profileData: AdminProfile = profile ?? { full_name: null, role: null };
+  const profile = data as AdminProfile | null;
 
   return (
     <div className="container-shagaf py-12">
       <p className="text-sm text-ink-muted">Signed in as {user.email}</p>
       <h1 className="mt-1 font-display text-3xl font-semibold text-shagaf-700 dark:text-shagaf-200">
-        Welcome, {profileData.full_name ?? "there"}
+        Welcome, {profile?.full_name ?? "there"}
       </h1>
       <p className="mt-2 text-ink-muted">
-        Your role: <span className="font-medium text-[--text]">{profileData.role}</span>
+        Your role: <span className="font-medium text-[--text]">{profile?.role ?? "User"}</span>
       </p>
 
       <div className="mt-10">
