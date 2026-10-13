@@ -10,6 +10,29 @@ import { SchoolCard, type SchoolCardData } from "@/components/school/SchoolCard"
 
 export const dynamic = "force-dynamic";
 
+interface FeaturedCourseRow {
+  slug: string;
+  title: string;
+  thumbnail_url: string | null;
+  level: string;
+  mode: string;
+  price_dzd: number;
+  rating_avg: number;
+  rating_count: number;
+  students_count: number;
+  teacher?: { full_name: string | null } | null;
+  school?: { name: string | null } | null;
+}
+
+interface FeaturedSchoolRow {
+  slug: string;
+  name: string;
+  logo_url: string | null;
+  location: string | null;
+  verified: boolean;
+  description: string | null;
+}
+
 async function getFeaturedCourses(): Promise<CourseCardData[]> {
   try {
     const supabase = createClient();
@@ -22,10 +45,19 @@ async function getFeaturedCourses(): Promise<CourseCardData[]> {
       .order("students_count", { ascending: false })
       .limit(6);
 
-    return (data ?? []).map((c: any) => ({
-      ...c,
-      teacher_name: c.teacher?.full_name ?? null,
-      school_name: c.school?.name ?? null,
+    const rows = (data ?? []) as FeaturedCourseRow[];
+    return rows.map((course) => ({
+      slug: course.slug,
+      title: course.title,
+      thumbnail_url: course.thumbnail_url,
+      level: course.level,
+      mode: course.mode,
+      price_dzd: course.price_dzd,
+      rating_avg: course.rating_avg,
+      rating_count: course.rating_count,
+      students_count: course.students_count,
+      teacher_name: course.teacher?.full_name ?? null,
+      school_name: course.school?.name ?? null,
     }));
   } catch {
     return [];
@@ -40,7 +72,7 @@ async function getFeaturedSchools(): Promise<SchoolCardData[]> {
       .select("slug, name, logo_url, location, verified, description")
       .eq("status", "approved")
       .limit(3);
-    return data ?? [];
+    return (data ?? []) as FeaturedSchoolRow[] as SchoolCardData[];
   } catch {
     return [];
   }

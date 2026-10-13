@@ -12,7 +12,37 @@ export const dynamic = "force-dynamic";
 
 type Tab = "all" | "courses" | "schools" | "teachers";
 
-async function getCourses(q: string) {
+interface CourseRow {
+  slug: string;
+  title: string;
+  thumbnail_url: string | null;
+  level: string;
+  mode: string;
+  price_dzd: number;
+  rating_avg: number;
+  rating_count: number;
+  students_count: number;
+  teacher?: { full_name: string | null } | null;
+  school?: { name: string | null } | null;
+}
+
+interface SchoolRow {
+  slug: string;
+  name: string;
+  logo_url: string | null;
+  location: string | null;
+  verified: boolean;
+  description: string | null;
+}
+
+interface TeacherRow {
+  id: string;
+  full_name: string;
+  headline: string | null;
+  avatar_url: string | null;
+}
+
+async function getCourses(q: string): Promise<CourseCardData[]> {
   try {
     const supabase = createClient();
     let query = supabase
@@ -24,17 +54,26 @@ async function getCourses(q: string) {
       .limit(24);
     if (q) query = query.ilike("title", `%${q}%`);
     const { data } = await query;
-    return (data ?? []).map((c: any) => ({
-      ...c,
-      teacher_name: c.teacher?.full_name ?? null,
-      school_name: c.school?.name ?? null,
-    })) as CourseCardData[];
+    const rows = (data ?? []) as CourseRow[];
+    return rows.map((course) => ({
+      slug: course.slug,
+      title: course.title,
+      thumbnail_url: course.thumbnail_url,
+      level: course.level,
+      mode: course.mode,
+      price_dzd: course.price_dzd,
+      rating_avg: course.rating_avg,
+      rating_count: course.rating_count,
+      students_count: course.students_count,
+      teacher_name: course.teacher?.full_name ?? null,
+      school_name: course.school?.name ?? null,
+    }));
   } catch {
     return [];
   }
 }
 
-async function getSchools(q: string) {
+async function getSchools(q: string): Promise<SchoolCardData[]> {
   try {
     const supabase = createClient();
     let query = supabase
@@ -44,13 +83,13 @@ async function getSchools(q: string) {
       .limit(24);
     if (q) query = query.ilike("name", `%${q}%`);
     const { data } = await query;
-    return (data ?? []) as SchoolCardData[];
+    return (data ?? []) as SchoolRow[] as SchoolCardData[];
   } catch {
     return [];
   }
 }
 
-async function getTeachers(q: string) {
+async function getTeachers(q: string): Promise<TeacherRow[]> {
   try {
     const supabase = createClient();
     let query = supabase
@@ -60,7 +99,7 @@ async function getTeachers(q: string) {
       .limit(24);
     if (q) query = query.ilike("full_name", `%${q}%`);
     const { data } = await query;
-    return data ?? [];
+    return (data ?? []) as TeacherRow[];
   } catch {
     return [];
   }
@@ -78,10 +117,10 @@ export default async function ExplorePage({
     : "all") as Tab;
   const q = searchParams.q ?? "";
 
-  const [courses, schools, teachers] = await Promise.all([
-    tab === "all" || tab === "courses" ? getCourses(q) : Promise.resolve([]),
-    tab === "all" || tab === "schools" ? getSchools(q) : Promise.resolve([]),
-    tab === "all" || tab === "teachers" ? getTeachers(q) : Promise.resolve([]),
+  const [courses, schools, teachers]: [CourseCardData[], SchoolCardData[], TeacherRow[]] = await Promise.all([
+    tab === "all" || tab === "courses" ? getCourses(q) : Promise.resolve([] as CourseCardData[]),
+    tab === "all" || tab === "schools" ? getSchools(q) : Promise.resolve([] as SchoolCardData[]),
+    tab === "all" || tab === "teachers" ? getTeachers(q) : Promise.resolve([] as TeacherRow[]),
   ]);
 
   const tabs: { value: Tab; label: string }[] = [
