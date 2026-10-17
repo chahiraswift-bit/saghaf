@@ -2,15 +2,20 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 const ROLE_HOME: Record<string, string> = {
-  learner: "/dashboard",
+  learner: "/dashboard/learner",
   teacher: "/teacher",
   school_admin: "/school",
+  company_admin: "/dashboard/corporate",
   super_admin: "/admin",
 };
 
 // Route prefix -> role allowed to access it.
 const PROTECTED_PREFIXES: { prefix: string; role: keyof typeof ROLE_HOME }[] = [
-  { prefix: "/dashboard", role: "learner" },
+  { prefix: "/dashboard/learner", role: "learner" },
+  { prefix: "/dashboard/teacher", role: "teacher" },
+  { prefix: "/dashboard/schools", role: "school_admin" },
+  { prefix: "/dashboard/admin", role: "super_admin" },
+  { prefix: "/dashboard/corporate", role: "company_admin" },
   { prefix: "/teacher", role: "teacher" },
   { prefix: "/school", role: "school_admin" },
   { prefix: "/admin", role: "super_admin" },
@@ -22,6 +27,19 @@ export async function middleware(request: NextRequest) {
 
   const matchedRule = PROTECTED_PREFIXES.find((r) => path.startsWith(r.prefix));
 
+  if (user && profile?.account_status === "suspended" && path !== "/account-suspended") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/account-suspended";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
+  if (path === "/dashboard" && user && profile) {
+    const url = request.nextUrl.clone();
+    url.pathname = ROLE_HOME[profile.role] ?? "/";
+    return NextResponse.redirect(url);
+  }
+
   if (matchedRule) {
     if (!user) {
       const url = request.nextUrl.clone();
@@ -30,9 +48,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    if (profile && (profile as any).role !== matchedRule.role) {
+    if (profile && profile.role !== matchedRule.role) {
       const url = request.nextUrl.clone();
-      url.pathname = ROLE_HOME[(profile as any).role] ?? "/";
+      url.pathname = ROLE_HOME[profile.role] ?? "/";
       return NextResponse.redirect(url);
     }
   }

@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { ShieldAlert } from "lucide-react";
+export default function AccountSuspended(){return <div className="mx-auto flex min-h-[70vh] max-w-xl flex-col items-center justify-center px-6 text-center"><span className="grid h-14 w-14 place-items-center rounded-2xl bg-[#ffebeb] text-[#b74444]"><ShieldAlert size={26}/></span><h1 className="mt-5 text-2xl font-semibold">Account access paused</h1><p className="mt-2 text-sm leading-relaxed text-[#8e8798]">This Shagaf account is currently suspended. Contact the platform team if you believe this is a mistake.</p><Link href="/contact" className="mt-5 rounded-xl bg-[#7140bd] px-4 py-2.5 text-xs font-semibold text-white">Contact support</Link></div>}

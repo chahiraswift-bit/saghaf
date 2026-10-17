@@ -7,23 +7,25 @@ import { createClient } from "@/lib/supabase/client";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Input, Label, FieldError } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { GraduationCap, Presentation, School } from "lucide-react";
+import { Building2, GraduationCap, Presentation, School } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getPasswordValidationError } from "@/lib/auth/password";
 import { withLocale } from "@/lib/i18n";
 
-type Role = "learner" | "teacher" | "school_admin";
+type Role = "learner" | "teacher" | "school_admin" | "company_admin";
 
 const ROLE_HOME: Record<Role, string> = {
   learner: "/dashboard",
   teacher: "/teacher",
   school_admin: "/school",
+  company_admin: "/dashboard/corporate",
 };
 
 const roleOptions: { value: Role; label: string; icon: typeof GraduationCap }[] = [
   { value: "learner", label: "Learner", icon: GraduationCap },
   { value: "teacher", label: "Teacher", icon: Presentation },
   { value: "school_admin", label: "School", icon: School },
+  { value: "company_admin", label: "Company", icon: Building2 },
 ];
 
 export default function RegisterPage() {
@@ -79,12 +81,12 @@ export default function RegisterPage() {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Join SHAGAF as a learner, teacher, or school."
+      subtitle="Join SHAGAF as a learner, teacher, school, or company."
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <Label htmlFor="role">I am joining as</Label>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {roleOptions.map(({ value, label, icon: Icon }) => (
               <button
                 type="button"

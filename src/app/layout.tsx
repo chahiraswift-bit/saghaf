@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { RootChrome } from "@/components/layout/RootChrome";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
@@ -33,9 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="font-body antialiased flex min-h-screen flex-col">
-        <Navbar />
-        <main className="flex-1 pt-3">{children}</main>
-        <Footer />
+        <RootChrome navbar={<Navbar />} footer={<Footer />}>{children}</RootChrome>
       </body>
     </html>
   );

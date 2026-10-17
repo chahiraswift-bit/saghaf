@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { Star, Users } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { formatPrice } from "@/lib/utils";
@@ -67,6 +68,9 @@ export function CourseCard({ course }: { course: CourseCardData }) {
             {formatPrice(course.price_dzd)}
           </span>
         </div>
+        <Link href={`/checkout/${course.slug}`} className="mt-3 flex w-full items-center justify-center rounded-xl bg-[#7140bd] px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-[#6134a8]">
+          {course.price_dzd > 0 ? "Enroll in course" : "Start learning"}
+        </Link>
       </div>
     </article>
   );

@@ -3,7 +3,7 @@
 // version with:
 //   npx supabase gen types typescript --project-id <your-project-ref> > src/lib/types/database.ts
 
-export type UserRole = "learner" | "teacher" | "school_admin" | "super_admin";
+export type UserRole = "learner" | "teacher" | "school_admin" | "company_admin" | "super_admin";
 export type CourseLevel = "beginner" | "intermediate" | "advanced";
 export type CourseMode = "online" | "offline" | "hybrid";
 export type CourseStatus = "draft" | "pending" | "published" | "rejected";
@@ -25,6 +25,7 @@ export interface Database {
           headline: string | null;
           skills: string[] | null;
           language: string;
+          account_status: "active" | "suspended";
           created_at: string;
           updated_at: string;
         };
@@ -57,6 +58,7 @@ export interface Database {
           status: SchoolStatus;
           subscription_plan: SubscriptionPlan;
           verified: boolean;
+          seats_allocated: number;
           created_at: string;
           updated_at: string;
         };
@@ -264,6 +266,10 @@ export interface Database {
           amount_dzd: number;
           status: "pending" | "succeeded" | "failed" | "refunded";
           provider: string | null;
+          invoice_number: string | null;
+          payment_method: string | null;
+          paid_at: string | null;
+          payment_reference: string | null;
           created_at: string;
         };
         Insert: Partial<Database["public"]["Tables"]["transactions"]["Row"]> & {
@@ -277,6 +283,54 @@ export interface Database {
         Row: { key: string; value: string; updated_at: string };
         Insert: { key: string; value: string };
         Update: Partial<{ value: string }>;
+        Relationships: [];
+      };
+      companies: {
+        Row: { id: string; owner_id: string; name: string; legal_name: string | null; sector: string | null; location: string | null; contact_email: string | null; status: "pending" | "approved" | "suspended"; seats_allocated: number; training_budget_dzd: number; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["companies"]["Row"]> & { owner_id: string; name: string };
+        Update: Partial<Database["public"]["Tables"]["companies"]["Row"]>;
+        Relationships: [];
+      };
+      company_employees: {
+        Row: { id: string; company_id: string; user_id: string | null; email: string; full_name: string | null; department: string | null; invited_at: string; joined_at: string | null };
+        Insert: Partial<Database["public"]["Tables"]["company_employees"]["Row"]> & { company_id: string; email: string };
+        Update: Partial<Database["public"]["Tables"]["company_employees"]["Row"]>;
+        Relationships: [];
+      };
+      company_course_assignments: {
+        Row: { id: string; company_id: string; employee_id: string; course_id: string; assigned_at: string; completed_at: string | null };
+        Insert: Partial<Database["public"]["Tables"]["company_course_assignments"]["Row"]> & { company_id: string; employee_id: string; course_id: string };
+        Update: Partial<Database["public"]["Tables"]["company_course_assignments"]["Row"]>;
+        Relationships: [];
+      };
+      training_requests: {
+        Row: { id: string; company_id: string; title: string; objectives: string; target_seats: number; status: "submitted" | "in_review" | "quoted" | "approved" | "declined" | "completed"; requested_at: string; reviewed_at: string | null; estimated_amount_dzd: number; quote_amount_dzd: number | null; program_type: string };
+        Insert: Partial<Database["public"]["Tables"]["training_requests"]["Row"]> & { company_id: string; title: string; objectives: string; target_seats: number };
+        Update: Partial<Database["public"]["Tables"]["training_requests"]["Row"]>;
+        Relationships: [];
+      };
+      audit_logs: {
+        Row: { id: string; actor_id: string | null; action: string; entity_type: string; entity_id: string | null; metadata: Record<string, unknown>; created_at: string };
+        Insert: Partial<Database["public"]["Tables"]["audit_logs"]["Row"]> & { action: string; entity_type: string };
+        Update: never;
+        Relationships: [];
+      };
+      teacher_payout_profiles: {
+        Row: { teacher_id: string; payout_method: "bank_transfer" | "baridimob" | "paypal"; account_holder: string; account_reference: string; bank_name: string | null; updated_at: string };
+        Insert: { teacher_id: string; payout_method: "bank_transfer" | "baridimob" | "paypal"; account_holder: string; account_reference: string; bank_name?: string | null };
+        Update: Partial<Database["public"]["Tables"]["teacher_payout_profiles"]["Row"]>;
+        Relationships: [];
+      };
+      teacher_payout_requests: {
+        Row: { id: string; teacher_id: string; amount_dzd: number; status: "pending" | "approved" | "paid" | "rejected"; requested_at: string; reviewed_at: string | null; payout_reference: string | null };
+        Insert: { teacher_id: string; amount_dzd: number };
+        Update: Partial<Database["public"]["Tables"]["teacher_payout_requests"]["Row"]>;
+        Relationships: [];
+      };
+      school_subscription_orders: {
+        Row: { id: string; school_id: string; requested_plan: "basic" | "pro" | "enterprise"; requested_seats: number; status: "pending" | "approved" | "declined"; created_at: string };
+        Insert: { school_id: string; requested_plan: "basic" | "pro" | "enterprise"; requested_seats: number };
+        Update: Partial<Database["public"]["Tables"]["school_subscription_orders"]["Row"]>;
         Relationships: [];
       };
     };
