@@ -5,18 +5,230 @@ import { ActionButton, Metric, Panel, SectionTitle } from "../ui";
 import { DashboardTitle, EmptyPanel } from "../components";
 import { createDraftCourse, requestPayout, savePayoutProfile } from "./actions";
 
-export const dynamic="force-dynamic";
-export default async function TeacherDashboard({searchParams}:{searchParams:{course?:string;payout?:string}}){
-  const supabase=createClient();const {data:{user}}=await supabase.auth.getUser();
-  const [{data:profile},{data:courses},{data:payoutProfile},{data:payoutRequests}]=await Promise.all([supabase.from("profiles").select("full_name").eq("id",user?.id??"").maybeSingle(),supabase.from("courses").select("id,title,status,students_count,rating_avg,rating_count,updated_at").eq("teacher_id",user?.id??"").order("updated_at",{ascending:false}),supabase.from("teacher_payout_profiles").select("payout_method,account_holder,account_reference,bank_name").eq("teacher_id",user?.id??"").maybeSingle(),supabase.from("teacher_payout_requests").select("amount_dzd,status").eq("teacher_id",user?.id??"")]);
-  const courseIds=(courses??[]).map(c=>c.id);const {data:paidTransactions}=courseIds.length?await supabase.from("transactions").select("amount_dzd").in("course_id",courseIds).eq("status","succeeded"):{data:[]};
-  const list=courses??[];const students=list.reduce((n,c)=>n+(c.students_count??0),0);const published=list.filter(c=>c.status==="published").length;const reviews=list.reduce((n,c)=>n+(c.rating_count??0),0);const rating=reviews?list.reduce((n,c)=>n+Number(c.rating_avg??0)*(c.rating_count??0),0)/reviews:null;const gross=(paidTransactions??[]).reduce((n,t)=>n+Number(t.amount_dzd),0);const net=gross*.8;const requested=(payoutRequests??[]).filter(p=>p.status!=="rejected").reduce((n,p)=>n+Number(p.amount_dzd),0);const available=Math.max(0,net-requested);
-  return <><DashboardTitle title={`Teaching studio${profile?.full_name?`, ${profile.full_name.split(" ")[0]}`:""}`} description="Course performance, learner reach and your teaching workflow in one place." action={<a href="#workflow"><ActionButton><Plus size={15}/> Build a course</ActionButton></a>}/>
-    {searchParams.course==="created"&&<div className="mb-5 rounded-xl border border-[#b8e6cc] bg-[#e6f5ec] px-4 py-3 text-xs text-[#21784d]">Draft course created. It is now in your course portfolio.</div>}{searchParams.course==="failed"&&<div className="mb-5 rounded-xl bg-[#ffebeb] px-4 py-3 text-xs text-[#b74444]">The course draft could not be saved. Please retry.</div>}{searchParams.course==="invalid"&&<div className="mb-5 rounded-xl bg-[#fff4dd] px-4 py-3 text-xs text-[#9c721e]">Complete all required course fields before saving.</div>}
-    <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Metric label="Learners reached" value={String(students)} trend="Enrolled across your courses" icon={Users}/><Metric label="Published courses" value={String(published)} trend={`${list.length} total course records`} icon={BookOpen} accent="blue"/><Metric label="Average rating" value={rating?rating.toFixed(1):"-"} trend={reviews?`${reviews} learner reviews`:"No learner ratings yet"} icon={Star} accent="amber"/><Metric label="Available earnings" value={`${Math.round(available).toLocaleString()} DZD`} trend={`${Math.round(gross).toLocaleString()} DZD gross · 20% platform commission`} icon={DollarSign} accent="green"/></div>
-    <div className="mb-6 grid gap-5 xl:grid-cols-[1.1fr_.9fr]"><Panel id="courses"><SectionTitle title="Course portfolio" more="Course workspace"/>{list.length?<div className="space-y-3">{list.map(c=><div key={c.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-[#eeeaf3] p-3 dark:border-white/[.07]"><div className="grid h-10 w-10 place-items-center rounded-xl bg-[#f1eafe] text-[#7743c5] dark:bg-[#523778]/30 dark:text-[#d3b8ff]"><BookOpen size={18}/></div><div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold">{c.title}</p><p className="mt-1 text-[10px] text-[#928a9b]">{c.students_count} enrolled  ·  Updated {new Intl.DateTimeFormat("en",{dateStyle:"medium"}).format(new Date(c.updated_at))}</p></div><span className="rounded-full bg-[#f1eafe] px-2.5 py-1 text-[9px] font-semibold capitalize text-[#7443b9] dark:bg-[#523778]/35 dark:text-[#d5bdff]">{c.status}</span></div>)}</div>:<EmptyPanel title="Your course studio is ready" description="Courses you create will appear here, with enrollment counts and learner ratings from the live catalog." href="/teacher" action="Open educator workspace"/>}</Panel>
-    <Panel id="workflow"><SectionTitle title="Course builder"/><p className="mb-4 text-xs text-[#928a9b]">Create a course draft in the Shagaf catalog. You can add lessons and publish it from the educator workspace.</p><form action={createDraftCourse} className="grid gap-3 sm:grid-cols-2"><label className="text-xs font-medium sm:col-span-2">Course title<input required minLength={3} maxLength={160} name="title" placeholder="A clear title for your course" className="mt-1.5 w-full rounded-xl border border-[#e9e4ef] bg-transparent px-3 py-2.5 text-xs outline-none focus:border-[#9664d2] dark:border-white/10"/></label><label className="text-xs font-medium sm:col-span-2">Course description<textarea required maxLength={4000} name="description" rows={3} placeholder="What will learners learn in this course?" className="mt-1.5 w-full resize-y rounded-xl border border-[#e9e4ef] bg-transparent px-3 py-2.5 text-xs outline-none focus:border-[#9664d2] dark:border-white/10"/></label><label className="text-xs font-medium">Level<select name="level" className="mt-1.5 w-full rounded-xl border border-[#e9e4ef] bg-transparent px-3 py-2.5 text-xs dark:border-white/10"><option value="beginner">Beginner</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option></select></label><label className="text-xs font-medium">Language<input required maxLength={16} name="language" defaultValue="en" placeholder="en, fr, ar" className="mt-1.5 w-full rounded-xl border border-[#e9e4ef] bg-transparent px-3 py-2.5 text-xs outline-none focus:border-[#9664d2] dark:border-white/10"/></label><div className="sm:col-span-2"><button className="rounded-xl bg-[#7140bd] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#6134a8]">Save course draft</button></div></form><div className="mt-5 flex items-center gap-2 rounded-xl bg-[#f8f6fb] p-3 text-[10px] text-[#81798b] dark:bg-white/[.03]"><CircleHelp size={14} className="shrink-0 text-[#7945c3]"/>Assessment submissions, live-session scheduling and payout reporting need dedicated platform records before they can be shown here.</div></Panel></div>
-    <Panel id="payout"><SectionTitle title="Payouts & earnings"/><p className="mb-4 text-xs text-[#928a9b]">Gross paid course revenue is split using the current 20% platform commission; payout requests are settled manually.</p>{searchParams.payout&&<p className="mb-3 rounded-lg bg-[#e6f5ec] px-3 py-2 text-xs text-[#278457]">{searchParams.payout==="requested"?"Withdrawal request submitted for review.":searchParams.payout==="saved"?"Payout details saved.":searchParams.payout==="exceeds"?"Requested amount exceeds your available earnings.":"Please review payout details and try again."}</p>}<div className="mb-4 grid gap-3 sm:grid-cols-3"><div className="rounded-xl bg-[#f8f6fb] p-3 dark:bg-white/[.03]"><p className="text-[10px] text-[#928a9b]">Gross paid sales</p><p className="mt-1 text-sm font-semibold">{Math.round(gross).toLocaleString()} DZD</p></div><div className="rounded-xl bg-[#f8f6fb] p-3 dark:bg-white/[.03]"><p className="text-[10px] text-[#928a9b]">Platform fee · 20%</p><p className="mt-1 text-sm font-semibold">{Math.round(gross*.2).toLocaleString()} DZD</p></div><div className="rounded-xl bg-[#f8f6fb] p-3 dark:bg-white/[.03]"><p className="text-[10px] text-[#928a9b]">Available to request</p><p className="mt-1 text-sm font-semibold">{Math.round(available).toLocaleString()} DZD</p></div></div><div className="grid gap-5 lg:grid-cols-2"><form action={savePayoutProfile} className="grid gap-3 sm:grid-cols-2"><label className="text-[10px] font-medium">Payout method<select name="payout_method" defaultValue={payoutProfile?.payout_method??"bank_transfer"} className="mt-1.5 w-full rounded-lg border border-[#e9e4ef] bg-transparent px-3 py-2 text-xs dark:border-white/10"><option value="bank_transfer">Bank transfer</option><option value="baridimob">BaridiMob</option><option value="paypal">PayPal (manual)</option></select></label><label className="text-[10px] font-medium">Account holder<input required name="account_holder" defaultValue={payoutProfile?.account_holder??""} className="mt-1.5 w-full rounded-lg border border-[#e9e4ef] bg-transparent px-3 py-2 text-xs dark:border-white/10"/></label><label className="text-[10px] font-medium">Account / wallet reference<input required minLength={4} name="account_reference" defaultValue={payoutProfile?.account_reference??""} className="mt-1.5 w-full rounded-lg border border-[#e9e4ef] bg-transparent px-3 py-2 text-xs dark:border-white/10"/></label><label className="text-[10px] font-medium">Bank name<input name="bank_name" defaultValue={payoutProfile?.bank_name??""} className="mt-1.5 w-full rounded-lg border border-[#e9e4ef] bg-transparent px-3 py-2 text-xs dark:border-white/10"/></label><button className="rounded-lg border border-[#eeeaf3] px-3 py-2 text-[10px] font-semibold dark:border-white/10 sm:col-span-2">Save payout details</button></form><form action={requestPayout} className="flex items-end gap-2"><label className="flex-1 text-[10px] font-medium">Withdrawal amount (DZD)<input required type="number" min={1} max={Math.floor(available)} name="amount_dzd" className="mt-1.5 w-full rounded-lg border border-[#e9e4ef] bg-transparent px-3 py-2 text-xs dark:border-white/10"/></label><button disabled={!payoutProfile||available<1} className="rounded-lg bg-[#7140bd] px-4 py-2.5 text-[10px] font-semibold text-white disabled:opacity-50">Request withdrawal</button></form></div></Panel>
-    <Panel id="engagement"><SectionTitle title="Learner engagement"/><EmptyPanel title="Engagement analytics will appear here" description="Enrollment and review totals are available above. Lesson-level activity requires course progress tracking to be collected for each learner."/></Panel>
-  </>;
+export const dynamic = "force-dynamic";
+
+export default async function TeacherDashboard({
+  searchParams,
+}: {
+  searchParams: { course?: string; payout?: string };
+}) {
+  const supabase = createClient() as any;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [
+    { data: profile },
+    { data: courses },
+    { data: payoutProfile },
+    { data: payoutRequests },
+  ] = await Promise.all([
+    supabase.from("profiles").select("full_name").eq("id", user?.id ?? "").maybeSingle(),
+    supabase.from("courses").select("id,title,status,students_count,rating_avg,rating_count,updated_at").eq("teacher_id", user?.id ?? "").order("updated_at", { ascending: false }),
+    supabase.from("teacher_payout_profiles").select("payout_method,account_holder,account_reference,bank_name").eq("teacher_id", user?.id ?? "").maybeSingle(),
+    supabase.from("teacher_payout_requests").select("amount_dzd,status").eq("teacher_id", user?.id ?? ""),
+  ]);
+
+  const courseIds = (courses ?? []).map((c: any) => c.id);
+  const { data: paidTransactions } = courseIds.length
+    ? await supabase.from("transactions").select("amount_dzd").in("course_id", courseIds).eq("status", "succeeded")
+    : { data: [] };
+
+  const list = courses ?? [];
+  const students = list.reduce((n: number, c: any) => n + (c.students_count ?? 0), 0);
+  const published = list.filter((c: any) => c.status === "published").length;
+  const reviews = list.reduce((n: number, c: any) => n + (c.rating_count ?? 0), 0);
+  const rating = reviews
+    ? list.reduce((n: number, c: any) => n + Number(c.rating_avg ?? 0) * (c.rating_count ?? 0), 0) / reviews
+    : null;
+
+  const gross = (paidTransactions ?? []).reduce((n: number, t: any) => n + Number(t.amount_dzd ?? 0), 0);
+  const net = gross * 0.8;
+  const requested = (payoutRequests ?? [])
+    .filter((p: any) => p.status !== "rejected")
+    .reduce((n: number, p: any) => n + Number(p.amount_dzd ?? 0), 0);
+  const available = Math.max(0, net - requested);
+
+  return (
+    <>
+      <DashboardTitle
+        title={`Teaching studio${profile?.full_name ? `, \${profile.full_name.split(" ")[0]}` : ""}`}
+        description="Course performance, learner reach and your teaching workflow in one place."
+        action={
+          <a href="#workflow">
+            <ActionButton>
+              <Plus size={15} /> Build a course
+            </ActionButton>
+          </a>
+        }
+      />
+
+      {searchParams.course === "created" && (
+        <div className="mb-5 rounded-xl border border-[#b8e6cc] bg-[#e6f5ec] px-4 py-3 text-xs text-[#21784d]">
+          Draft course created. It is now in your course portfolio.
+        </div>
+      )}
+      {searchParams.course === "failed" && (
+        <div className="mb-5 rounded-xl bg-[#ffebeb] px-4 py-3 text-xs text-[#b74444]">
+          The course draft could not be saved. Please retry.
+        </div>
+      )}
+      {searchParams.course === "invalid" && (
+        <div className="mb-5 rounded-xl bg-[#fff4dd] px-4 py-3 text-xs text-[#9c721e]">
+          Complete all required course fields before saving.
+        </div>
+      )}
+
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Metric label="Learners reached" value={String(students)} trend="Enrolled across your courses" icon={Users} />
+        <Metric label="Published courses" value={String(published)} trend={`${list.length} total course records`} icon={BookOpen} accent="blue" />
+        <Metric label="Average rating" value={rating ? rating.toFixed(1) : "-"} trend={reviews ? `${reviews} learner reviews` : "No learner ratings yet"} icon={Star} accent="amber" />
+        <Metric label="Available earnings" value={`${Math.round(available).toLocaleString()} DZD`} trend={`${Math.round(gross).toLocaleString()} DZD gross · 20% platform commission`} icon={DollarSign} accent="green" />
+      </div>
+
+      <div className="mb-6 grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
+        <Panel id="courses">
+          <SectionTitle title="Course portfolio" more="Course workspace" />
+          {list.length ? (
+            <div className="space-y-3">
+              {list.map((c: any) => (
+                <div key={c.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-[#eeeaf3] p-3 dark:border-white/[.07]">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#f1eafe] text-[#7743c5] dark:bg-[#523778]/30 dark:text-[#d3b8ff]">
+                    <BookOpen size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold">{String(c.title ?? "")}</p>
+                    <p className="mt-1 text-[10px] text-[#928a9b]">
+                      {c.students_count ?? 0} enrolled  ·  Updated {c.updated_at ? new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(c.updated_at)) : "recently"}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-[#f1eafe] px-2.5 py-1 text-[9px] font-semibold capitalize text-[#7443b9] dark:bg-[#523778]/35 dark:text-[#d5bdff]">
+                    {String(c.status ?? "")}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyPanel
+              title="Your course studio is ready"
+              description="Courses you create will appear here, with enrollment counts and learner ratings from the live catalog."
+              href="/teacher"
+              action="Open educator workspace"
+            />
+          )}
+        </Panel>
+
+        <Panel id="workflow">
+          <SectionTitle title="Course builder" />
+          <p className="mb-4 text-xs text-[#928a9b]">
+            Create a course draft in the Shagaf catalog. You can add lessons and publish it from the educator workspace.
+          </p>
+          <form action={createDraftCourse} className="grid gap-3 sm:grid-cols-2">
+            <label className="text-xs font-medium sm:col-span-2">
+              Course title
+              <input required minLength={3} maxLength={160} name="title" placeholder="A clear title for your course" className="mt-1.5 w-full rounded-xl border border-[#e9e4ef] bg-transparent px-3 py-2.5 text-xs outline-none focus:border-[#9664d2] dark:border-white/10" />
+            </label>
+            <label className="text-xs font-medium sm:col-span-2">
+              Course description
+              <textarea required maxLength={4000} name="description" rows={3} placeholder="What will learners learn in this course?" className="mt-1.5 w-full resize-y rounded-xl border border-[#e9e4ef] bg-transparent px-3 py-2.5 text-xs outline-none focus:border-[#9664d2] dark:border-white/10" />
+            </label>
+            <label className="text-xs font-medium">
+              Level
+              <select name="level" className="mt-1.5 w-full rounded-xl border border-[#e9e4ef] bg-transparent px-3 py-2.5 text-xs dark:border-white/10">
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </label>
+            <label className="text-xs font-medium">
+              Language
+              <input required maxLength={16} name="language" defaultValue="en" placeholder="en, fr, ar" className="mt-1.5 w-full rounded-xl border border-[#e9e4ef] bg-transparent px-3 py-2.5 text-xs outline-none focus:border-[#9664d2] dark:border-white/10" />
+            </label>
+            <div className="sm:col-span-2">
+              <button className="rounded-xl bg-[#7140bd] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#6134a8]">
+                Save course draft
+              </button>
+            </div>
+          </form>
+          <div className="mt-5 flex items-center gap-2 rounded-xl bg-[#f8f6fb] p-3 text-[10px] text-[#81798b] dark:bg-white/[.03]">
+            <CircleHelp size={14} className="shrink-0 text-[#7945c3]" />
+            Assessment submissions, live-session scheduling and payout reporting need dedicated platform records before they can be shown here.
+          </div>
+        </Panel>
+      </div>
+
+      <Panel id="payout">
+        <SectionTitle title="Payouts & earnings" />
+        <p className="mb-4 text-xs text-[#928a9b]">
+          Gross paid course revenue is split using the current 20% platform commission; payout requests are settled manually.
+        </p>
+        {searchParams.payout && (
+          <p className="mb-3 rounded-lg bg-[#e6f5ec] px-3 py-2 text-xs text-[#278457]">
+            {searchParams.payout === "requested"
+              ? "Withdrawal request submitted for review."
+              : searchParams.payout === "saved"
+              ? "Payout details saved."
+              : searchParams.payout === "exceeds"
+              ? "Requested amount exceeds your available earnings."
+              : "Please review payout details and try again."}
+          </p>
+        )}
+        <div className="mb-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl bg-[#f8f6fb] p-3 dark:bg-white/[.03]">
+            <p className="text-[10px] text-[#928a9b]">Gross paid sales</p>
+            <p className="mt-1 text-sm font-semibold">{Math.round(gross).toLocaleString()} DZD</p>
+          </div>
+          <div className="rounded-xl bg-[#f8f6fb] p-3 dark:bg-white/[.03]">
+            <p className="text-[10px] text-[#928a9b]">Platform fee · 20%</p>
+            <p className="mt-1 text-sm font-semibold">{Math.round(gross * 0.2).toLocaleString()} DZD</p>
+          </div>
+          <div className="rounded-xl bg-[#f8f6fb] p-3 dark:bg-white/[.03]">
+            <p className="text-[10px] text-[#928a9b]">Available to request</p>
+            <p className="mt-1 text-sm font-semibold">{Math.round(available).toLocaleString()} DZD</p>
+          </div>
+        </div>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <form action={savePayoutProfile} className="grid gap-3 sm:grid-cols-2">
+            <label className="text-[10px] font-medium">
+              Payout method
+              <select name="payout_method" defaultValue={payoutProfile?.payout_method ?? "bank_transfer"} className="mt-1.5 w-full rounded-lg border border-[#e9e4ef] bg-transparent px-3 py-2 text-xs dark:border-white/10">
+                <option value="bank_transfer">Bank transfer</option>
+                <option value="baridimob">BaridiMob</option>
+                <option value="paypal">PayPal (manual)</option>
+              </select>
+            </label>
+            <label className="text-[10px] font-medium">
+              Account holder
+              <input required name="account_holder" defaultValue={payoutProfile?.account_holder ?? ""} className="mt-1.5 w-full rounded-lg border border-[#e9e4ef] bg-transparent px-3 py-2 text-xs dark:border-white/10" />
+            </label>
+            <label className="text-[10px] font-medium">
+              Account / wallet reference
+              <input required minLength={4} name="account_reference" defaultValue={payoutProfile?.account_reference ?? ""} className="mt-1.5 w-full rounded-lg border border-[#e9e4ef] bg-transparent px-3 py-2 text-xs dark:border-white/10" />
+            </label>
+            <label className="text-[10px] font-medium">
+              Bank name
+              <input name="bank_name" defaultValue={payoutProfile?.bank_name ?? ""} className="mt-1.5 w-full rounded-lg border border-[#e9e4ef] bg-transparent px-3 py-2 text-xs dark:border-white/10" />
+            </label>
+            <button className="rounded-lg border border-[#eeeaf3] px-3 py-2 text-[10px] font-semibold dark:border-white/10 sm:col-span-2">
+              Save payout details
+            </button>
+          </form>
+          <form action={requestPayout} className="flex items-end gap-2">
+            <label className="flex-1 text-[10px] font-medium">
+              Withdrawal amount (DZD)
+              <input required type="number" min={1} max={Math.floor(available)} name="amount_dzd" className="mt-1.5 w-full rounded-lg border border-[#e9e4ef] bg-transparent px-3 py-2 text-xs dark:border-white/10" />
+            </label>
+            <button disabled={!payoutProfile || available < 1} className="rounded-lg bg-[#7140bd] px-4 py-2.5 text-[10px] font-semibold text-white disabled:opacity-50">
+              Request withdrawal
+            </button>
+          </form>
+        </div>
+      </Panel>
+
+      <Panel id="engagement">
+        <SectionTitle title="Learner engagement" />
+        <EmptyPanel title="Engagement analytics will appear here" description="Enrollment and review totals are available above. Lesson-level activity requires course progress tracking to be collected for each learner." />
+      </Panel>
+    </>
+  );
 }
