@@ -13,7 +13,7 @@ const { data: profile } = await (supabase.from("profiles") as any).select("role"
   const courseId = String(formData.get("course_id") ?? "");
   const method = String(formData.get("payment_method") ?? "bank_transfer");
   if (!courseId || !["bank_transfer", "cib", "edahabia", "stripe", "paypal"].includes(method)) redirect("/explore");
-  const { data: course } = await supabase.from("courses").select("id,title,slug,price_dzd,status").eq("id", courseId).eq("status", "published").maybeSingle();
+  const { data: course } = await (supabase.from("courses") as any).select("id,title,slug,price_dzd,status").eq("id", courseId).eq("status", "published").maybeSingle();
   if (!course) redirect("/explore?checkout=unavailable");
   const { data: existing } = await supabase.from("enrollments").select("id").eq("learner_id", user.id).eq("course_id", course.id).neq("status", "cancelled").maybeSingle();
   if (existing) redirect("/dashboard/learner?checkout=already-enrolled");
