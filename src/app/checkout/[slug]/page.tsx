@@ -7,7 +7,7 @@ import { startCourseCheckout } from "./actions";
 
 export const dynamic = "force-dynamic";
 export default async function CourseCheckout({ params, searchParams }: { params: { slug: string }; searchParams: { checkout?: string } }) {
-  const supabase = createClient();
+  const supabase = createClient() as any;
   const [{ data: { user } }, { data: course }] = await Promise.all([
     supabase.auth.getUser(),
     supabase.from("courses").select("id,title,description,price_dzd,level,language").eq("slug", params.slug).eq("status", "published").maybeSingle(),
