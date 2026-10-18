@@ -5,13 +5,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 export async function signOut() {
-  const supabase = createClient();
+  const supabase = createClient() as any;
   await supabase.auth.signOut();
   redirect("/");
 }
 
 export async function markNotificationRead(formData: FormData) {
-  const supabase = createClient();
+  const supabase = createClient() as any;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
   const notificationId = String(formData.get("notification_id") ?? "");
